@@ -15,7 +15,44 @@ namespace ConsoleApp
             var contextOptions = new DbContextOptionsBuilder<Context>()
                 .UseSqlServer(@"Server=(local);Database=EFC;Integrated security=true");
             await ChangeTracking(contextOptions);
+            await ConcurrencyToken(contextOptions);
+            using var context = new Context(contextOptions.Options);
 
+            var products = Enumerable.Range(100, 4).Select(x => new Product { Name = $"Product {x}", Price = 2.33f * x }).ToList();
+
+            using (var transaction = await context.Database.BeginTransactionAsync())
+            {
+                var counter = 0;
+                try
+                {
+                    context.RandomFail = true;
+
+                    foreach (var item in products)
+                    {
+                        counter++;
+                        await context.AddAsync(item);
+                        await context.SaveChangesAsync();
+
+                        await transaction.CreateSavepointAsync($"Product{counter}");
+                    }
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    //await transaction.RollbackToSavepointAsync($"Product{counter-1}");
+                    await transaction.RollbackToSavepointAsync($"Product2");
+                    await transaction.CommitAsync();
+                }
+
+
+                context.RandomFail = false;
+                //await transaction.RollbackAsync();
+            }
+        }
+
+        private static async Task ConcurrencyToken(DbContextOptionsBuilder<Context> contextOptions)
+        {
             using var context = new Context(contextOptions.Options);
 
             var product = await context.Set<Product>().FirstAsync();

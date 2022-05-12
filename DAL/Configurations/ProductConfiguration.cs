@@ -18,6 +18,8 @@ namespace DAL.Configurations
 
             //Znacznik czasowy (token)
             builder.Property(x => x.Timestamp).IsRowVersion();
+
+            builder.HasIndex(x => x.Name).IsUnique();
         }
     }
 }
