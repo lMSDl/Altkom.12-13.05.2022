@@ -13,7 +13,11 @@ namespace DAL.Configurations
     {
         public void Configure(EntityTypeBuilder<Product> builder)
         {
+            //Token współbieżności
+            //builder.Property(x => x.Name).IsConcurrencyToken();
 
+            //Znacznik czasowy (token)
+            builder.Property(x => x.Timestamp).IsRowVersion();
         }
     }
 }

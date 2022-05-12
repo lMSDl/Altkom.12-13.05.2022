@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,11 +14,58 @@ namespace ConsoleApp
         {
             var contextOptions = new DbContextOptionsBuilder<Context>()
                 .UseSqlServer(@"Server=(local);Database=EFC;Integrated security=true");
+            await ChangeTracking(contextOptions);
 
+            using var context = new Context(contextOptions.Options);
 
+            var product = await context.Set<Product>().FirstAsync();
+
+            product.Price = 12.11f;
+
+            var saved = false;
+            while (!saved)
+            {
+                try
+                {
+                    await context.SaveChangesAsync();
+                    saved = true;
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    foreach (var entry in ex.Entries)
+                    {
+                        //wartości jakie my chcemy wprowadzić do encji (stan jaki chcemy zapisać)
+                        var currentValues = entry.CurrentValues;
+                        //pobieramy wartości, które są aktualnie w bazie danych
+                        var databaseValues = entry.GetDatabaseValues();
+
+                        if (entry.Entity is Product)
+                        {
+                            var nameProperty = currentValues.Properties.SingleOrDefault(x => x.Name == nameof(Product.Name));
+                            var currentNamePropertyValue = currentValues[nameProperty];
+                            var databaseNamePropertyValue = databaseValues[nameProperty];
+                            //jeśli nazwa produktu uległa zmianie, to w bazie danych nie wprowadzany zmian
+                            //(przepisujemy do currentValues wartości z bazy danych (databaseValues))
+                            if (!currentNamePropertyValue.Equals(databaseNamePropertyValue))
+                            {
+                                foreach (var property in currentValues.Properties)
+                                {
+                                    currentValues[property] = databaseValues[property];
+                                }
+                            }
+                        }
+
+                        entry.OriginalValues.SetValues(databaseValues);
+                    }
+
+                }
+            }
+
+        }
+
+        private static async Task ChangeTracking(DbContextOptionsBuilder<Context> contextOptions)
+        {
             var products = Enumerable.Range(1, 10).Select(x => new Product { Name = $"Product {x}", Price = 2.33f * x }).ToList();
-
-
             using (var context = new Context(contextOptions.Options))
             {
 
