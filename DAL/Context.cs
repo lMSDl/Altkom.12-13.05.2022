@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Models;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,6 +17,11 @@ namespace DAL
         public Context([NotNullAttribute] DbContextOptions options) : base(options)
         {
         }
+
+        public static Func<Context, DateTime, DateTime, IEnumerable<Order>> GetOrdersRange { get; } =
+            EF.CompileQuery((Context context, DateTime from, DateTime to) => 
+                context.Set<Order>().AsNoTracking().Include(x => x.Products)
+                       .Where(x => x.DateTime >= from).Where(x => x.DateTime <= to));
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

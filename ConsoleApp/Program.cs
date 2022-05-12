@@ -19,7 +19,15 @@ namespace ConsoleApp
             await ChangeTracking(contextOptions);
             await ConcurrencyToken(contextOptions);
             await Transactions(contextOptions);
+            await LoadRelatedData(contextOptions);
 
+            var context = new Context(contextOptions.Options);
+
+            var orders = Context.GetOrdersRange(context, DateTime.Now.AddDays(-1), DateTime.Now);
+        }
+
+        private static async Task LoadRelatedData(DbContextOptionsBuilder<Context> contextOptions)
+        {
             using (var context = new Context(contextOptions.Options))
             {
                 //Lazy loading z wykorzystaniem ILazyLoader
