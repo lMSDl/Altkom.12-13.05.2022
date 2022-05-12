@@ -38,6 +38,16 @@ namespace DAL
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
+
+            modelBuilder.Model.GetEntityTypes().SelectMany(x => x.GetProperties())
+                .Where(x => x.PropertyInfo?.Name == "Key").ToList()
+                .ForEach(property => {
+                    property.IsNullable = false;
+                    property.DeclaringEntityType.SetPrimaryKey(property); });
+
+            modelBuilder.Model.GetEntityTypes().SelectMany(x => x.GetProperties())
+                .Where(x => x.PropertyInfo?.PropertyType == typeof(DateTime)).ToList()
+                .ForEach(property => property.SetColumnType("datetime"));
         }
 
         public bool RandomFail { get; set; }
