@@ -20,8 +20,26 @@ namespace ConsoleApp
             await ConcurrencyToken(contextOptions);
             await Transactions(contextOptions);
             await LoadRelatedData(contextOptions);
+            CompileQuery(contextOptions);
 
-            var context = new Context(contextOptions.Options);
+            using var context = new Context(contextOptions.Options);
+            var orders = await context.Set<Order>().Where(x => x.Id % 2 == 0).ToListAsync();
+            foreach (var order in orders)
+            {
+                order.IsDeleted = true;
+            }
+            await context.SaveChangesAsync();
+            context.ChangeTracker.Clear();
+
+            orders = await context.Set<Order>()/*.Where(x => !x.IsDeleted)*/.ToListAsync();
+            context.ChangeTracker.Clear();
+
+            orders = await context.Set<Product>().SelectMany(x => x.Orders).Distinct().ToListAsync();
+        }
+
+        private static void CompileQuery(DbContextOptionsBuilder<Context> contextOptions)
+        {
+            using var context = new Context(contextOptions.Options);
 
             var orders = Context.GetOrdersRange(context, DateTime.Now.AddDays(-1), DateTime.Now);
         }

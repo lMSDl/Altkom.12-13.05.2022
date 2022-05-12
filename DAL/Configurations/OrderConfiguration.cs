@@ -13,6 +13,7 @@ namespace DAL.Configurations
     {
         public void Configure(EntityTypeBuilder<Order> builder)
         {
+            builder.HasQueryFilter(x => !x.IsDeleted);
         }
     }
 }
