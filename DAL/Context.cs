@@ -6,13 +6,10 @@ namespace DAL
 {
     public class Context : DbContext
     {
-        public Context([NotNullAttribute] DbContextOptions options) : base(options)
-        {
-        }
         public Context()
         {
         }
-        public Context(string connectionString)
+        public Context([NotNullAttribute] DbContextOptions options) : base(options)
         {
         }
 
