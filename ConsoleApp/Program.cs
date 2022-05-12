@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,9 +14,48 @@ namespace ConsoleApp
         static async Task Main(string[] args)
         {
             var contextOptions = new DbContextOptionsBuilder<Context>()
+                .LogTo(x => Debug.WriteLine(x))
                 .UseSqlServer(@"Server=(local);Database=EFC;Integrated security=true");
             await ChangeTracking(contextOptions);
             await ConcurrencyToken(contextOptions);
+            await Transactions(contextOptions);
+
+            using (var context = new Context(contextOptions.Options))
+            {
+                //Lazy loading z wykorzystaniem ILazyLoader
+                var order = await context.Set<Order>().FirstAsync();
+
+                context.ChangeTracker.Clear();
+
+                //Eager loading
+                order = await context.Set<Order>().Include(x => x.Products).ThenInclude(x => x.Orders).Where(x => x.Products.Count > 1).FirstAsync();
+
+                context.ChangeTracker.Clear();
+                order = await context.Set<Order>().FirstAsync();
+
+                //Explicit loading
+                //await context.Set<Product>().LoadAsync();
+                await context.Entry(order).Collection(x => x.Products).LoadAsync();
+                //await context.Entry(order).Reference(x => x.<>).LoadAsync();
+            }
+
+
+
+            //LazyLoading z wykorzystanie proxy
+            //var contextOptionsProxies = new DbContextOptionsBuilder<Context>()
+            //    .LogTo(x => Debug.WriteLine(x))
+            //    .UseSqlServer(@"Server=(local);Database=EFC;Integrated security=true")
+            //    .UseLazyLoadingProxies();
+
+            //Order myOrder = null;
+            //using (var context = new Context(contextOptionsProxies.Options))
+            //{
+            //    myOrder = await context.Set<Order>().FirstAsync();
+            //}
+        }
+
+        private static async Task Transactions(DbContextOptionsBuilder<Context> contextOptions)
+        {
             using var context = new Context(contextOptions.Options);
 
             var products = Enumerable.Range(100, 4).Select(x => new Product { Name = $"Product {x}", Price = 2.33f * x }).ToList();
@@ -41,8 +81,11 @@ namespace ConsoleApp
                 catch
                 {
                     //await transaction.RollbackToSavepointAsync($"Product{counter-1}");
-                    await transaction.RollbackToSavepointAsync($"Product2");
-                    await transaction.CommitAsync();
+                    if (counter > 2)
+                    {
+                        await transaction.RollbackToSavepointAsync($"Product2");
+                        await transaction.CommitAsync();
+                    }
                 }
 
 
