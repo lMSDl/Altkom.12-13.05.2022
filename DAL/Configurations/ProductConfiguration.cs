@@ -19,7 +19,8 @@ namespace DAL.Configurations
             //builder.Property(x => x.Name).IsConcurrencyToken();
 
             //Znacznik czasowy (token)
-            builder.Property(x => x.Timestamp).IsRowVersion();
+            builder.Property(x => x.Timestamp).IsRowVersion()
+                .UsePropertyAccessMode(PropertyAccessMode.PreferProperty);
 
             builder.HasIndex(x => x.Name).IsUnique();
 
@@ -27,7 +28,8 @@ namespace DAL.Configurations
             builder.Property(x => x.Price).HasDefaultValueSql("NEXT VALUE FOR sequences.ProductPrice");
 
 
-            builder.Property(x => x.Description).HasComputedColumnSql("[Name] + ' ' + STR([Price]) + 'zł'", stored: true);
+            //builder.Property(x => x.Description).HasComputedColumnSql("[Name] + ' ' + STR([Price]) + 'zł'", stored: true);
+            builder.Property("_description").HasColumnName("Description").HasComputedColumnSql("[Name] + ' ' + STR([Price]) + 'zł'", stored: true);
 
         }
     }

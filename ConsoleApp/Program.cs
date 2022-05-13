@@ -22,13 +22,23 @@ namespace ConsoleApp
             await LoadRelatedData(contextOptions);
             CompileQuery(contextOptions);
             await GlobalFilters(contextOptions);
+            await ShadowProperty(contextOptions);
 
+            var properties = typeof(Entity).GetProperties().Select(x => x.Name).ToList();
+            var fields = typeof(Entity).GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Select(x => x.Name).ToList();
+
+            using var context = new Context(contextOptions.Options);
+            context.Set<Product>().ToList().ForEach(x => Console.WriteLine(x.ToString()));
+        }
+
+        private static async Task ShadowProperty(DbContextOptionsBuilder<Context> contextOptions)
+        {
             using var context = new Context(contextOptions.Options);
             var dateTime = DateTime.Now.AddSeconds(-100);
             var order = context.Set<Order>()
                 .Where(x => EF.Property<DateTime>(x, "Created") >= dateTime)
                 .OrderBy(x => EF.Property<DateTime>(x, "Created")) //EF stosujemy tylko w LinqToSql
-                //.ToList().OrderBy(x => context.Entry(x).Property("Created").CurrentValue) //przy zapytaniach na kolekacjach
+                                                                   //.ToList().OrderBy(x => context.Entry(x).Property("Created").CurrentValue) //przy zapytaniach na kolekacjach
                 .ToList();
 
             context.Entry(order.First()).Property("Created").CurrentValue = new DateTime(2000, 1, 1);
