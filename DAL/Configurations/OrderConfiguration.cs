@@ -15,6 +15,11 @@ namespace DAL.Configurations
         {
             base.Configure(builder);
             builder.HasQueryFilter(x => !x.IsDeleted);
+            builder.Property(x => x.OrderType).HasDefaultValue(OrderType.Unknown)
+                .HasConversion<string>();
+                /*.HasConversion(x => x.ToString(),
+                               x => (OrderType)Enum.Parse(typeof(OrderType), x));*/
+                //.HasConversion(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.EnumToStringConverter<OrderType>());
         }
     }
 }

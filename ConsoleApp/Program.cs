@@ -187,7 +187,7 @@ namespace ConsoleApp
                 for (int i = 0; i < 10; i++)
                 {
                     var order = new Order() { DateTime = DateTime.Now.AddMinutes(-i * 452) };
-
+                    order.OrderType = (OrderType)(i % 3);
                     var random = new Random(i);
                     var randomValue1 = random.Next(0, 9);
                     var randomValue2 = random.Next(0, 9);
