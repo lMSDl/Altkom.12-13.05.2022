@@ -23,9 +23,12 @@ namespace DAL.Configurations
 
             builder.HasIndex(x => x.Name).IsUnique();
 
-            builder.Property(x => x.Price).HasDefaultValue(0.01);
+            //builder.Property(x => x.Price).HasDefaultValue(0.01);
+            builder.Property(x => x.Price).HasDefaultValueSql("NEXT VALUE FOR sequences.ProductPrice");
+
 
             builder.Property(x => x.Description).HasComputedColumnSql("[Name] + ' ' + STR([Price]) + 'zł'", stored: true);
+
         }
     }
 }

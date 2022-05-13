@@ -48,6 +48,14 @@ namespace DAL
             //modelBuilder.Model.GetEntityTypes().SelectMany(x => x.GetProperties())
             //    .Where(x => x.PropertyInfo?.PropertyType == typeof(DateTime)).ToList()
             //    .ForEach(property => property.SetColumnType("datetime"));
+
+            modelBuilder.HasSequence<int>("ProductPrice", "sequences")
+                .StartsAt(100)
+                .HasMax(999)
+                .HasMin(10)
+                .IncrementsBy(33)
+                .IsCyclic();
+
         }
 
         public bool RandomFail { get; set; }
