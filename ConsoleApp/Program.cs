@@ -29,6 +29,7 @@ namespace ConsoleApp
             await context.Database.ExecuteSqlRawAsync("EXEC ChangePrice @p0", -1);
             var result = await context.Set<OrderSummary>().FromSqlInterpolated($"EXEC OrderSummary {2}").ToListAsync();
 
+            var orderSummaries = await context.Set<OrderSummary>().ToListAsync();
         }
 
         private static void Backfields(DbContextOptionsBuilder<Context> contextOptions)
