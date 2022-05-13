@@ -23,10 +23,18 @@ namespace ConsoleApp
             CompileQuery(contextOptions);
             await GlobalFilters(contextOptions);
             await ShadowProperty(contextOptions);
+            Backfields(contextOptions);
 
+            using var context = new Context(contextOptions.Options);
+            await context.Database.ExecuteSqlRawAsync("EXEC ChangePrice @p0", -1);
+            var result = await context.Set<OrderSummary>().FromSqlInterpolated($"EXEC OrderSummary {2}").ToListAsync();
+
+        }
+
+        private static void Backfields(DbContextOptionsBuilder<Context> contextOptions)
+        {
             var properties = typeof(Entity).GetProperties().Select(x => x.Name).ToList();
             var fields = typeof(Entity).GetFields(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Select(x => x.Name).ToList();
-
             using var context = new Context(contextOptions.Options);
             context.Set<Product>().ToList().ForEach(x => Console.WriteLine(x.ToString()));
         }
