@@ -9,10 +9,12 @@ using System.Threading.Tasks;
 
 namespace DAL.Configurations
 {
-    public class ProductConfiguration : IEntityTypeConfiguration<Product>
+    public class ProductConfiguration : EntityConfiguration<Product>
     {
-        public void Configure(EntityTypeBuilder<Product> builder)
+        public override void Configure(EntityTypeBuilder<Product> builder)
         {
+            base.Configure(builder);
+
             //Token współbieżności
             //builder.Property(x => x.Name).IsConcurrencyToken();
 
@@ -20,6 +22,10 @@ namespace DAL.Configurations
             builder.Property(x => x.Timestamp).IsRowVersion();
 
             builder.HasIndex(x => x.Name).IsUnique();
+
+            builder.Property(x => x.Price).HasDefaultValue(0.01);
+
+            builder.Property(x => x.Description).HasComputedColumnSql("[Name] + ' ' + STR([Price]) + 'zł'", stored: true);
         }
     }
 }

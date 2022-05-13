@@ -21,7 +21,13 @@ namespace ConsoleApp
             await Transactions(contextOptions);
             await LoadRelatedData(contextOptions);
             CompileQuery(contextOptions);
+            await GlobalFilters(contextOptions);
 
+
+        }
+
+        private static async Task GlobalFilters(DbContextOptionsBuilder<Context> contextOptions)
+        {
             using var context = new Context(contextOptions.Options);
             var orders = await context.Set<Order>().Where(x => x.Id % 2 == 0).ToListAsync();
             foreach (var order in orders)

@@ -16,6 +16,7 @@ namespace Models
         //public virtual IEnumerable<Order> Orders { get; set; } // virtual wymagany przez ProxyLazyLoading
         public IEnumerable<Order> Orders { get; set; }
 
+        public string Description { get; }
 
         //Konfigurujemy token współbieżności za pomocą sygnatury czasowej
         //[Timestamp]

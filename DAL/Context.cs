@@ -45,9 +45,9 @@ namespace DAL
                     property.IsNullable = false;
                     property.DeclaringEntityType.SetPrimaryKey(property); });
 
-            modelBuilder.Model.GetEntityTypes().SelectMany(x => x.GetProperties())
-                .Where(x => x.PropertyInfo?.PropertyType == typeof(DateTime)).ToList()
-                .ForEach(property => property.SetColumnType("datetime"));
+            //modelBuilder.Model.GetEntityTypes().SelectMany(x => x.GetProperties())
+            //    .Where(x => x.PropertyInfo?.PropertyType == typeof(DateTime)).ToList()
+            //    .ForEach(property => property.SetColumnType("datetime"));
         }
 
         public bool RandomFail { get; set; }
