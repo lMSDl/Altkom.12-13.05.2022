@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Infrastructure;
+using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,5 +30,7 @@ namespace Models
         public DateTime DateTime { get; set; }
         //public virtual ICollection<Product> Products { get; set; }  // virtual wymagany przez ProxyLazyLoading
         public ICollection<Product> Products { get => _lazyLoader.Load(this, ref products); set => products = value; }
+
+        public Point DeliveryLocation { get; set; }
     }
 }

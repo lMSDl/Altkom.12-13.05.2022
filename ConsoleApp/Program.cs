@@ -1,6 +1,7 @@
 ﻿using DAL;
 using Microsoft.EntityFrameworkCore;
 using Models;
+using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,7 +16,7 @@ namespace ConsoleApp
         {
             var contextOptions = new DbContextOptionsBuilder<Context>()
                 .LogTo(x => Debug.WriteLine(x))
-                .UseSqlServer(@"Server=(local);Database=EFC;Integrated security=true");
+                .UseSqlServer(@"Server=(local);Database=EFC;Integrated security=true", x => x.UseNetTopologySuite());
             await ChangeTracking(contextOptions);
             await ConcurrencyToken(contextOptions);
             await Transactions(contextOptions);
@@ -24,14 +25,30 @@ namespace ConsoleApp
             await GlobalFilters(contextOptions);
             await ShadowProperty(contextOptions);
             Backfields(contextOptions);
+            await Procedures(contextOptions);
 
+            using var context = new Context(contextOptions.Options);
+
+            var startPoint = new Point(52, 21) { SRID = 4326};
+            var polygon = new Polygon(new LinearRing(new Coordinate[] { new Coordinate(52, 21), new Coordinate(42, 0), new Coordinate(62, 11),  new Coordinate(52, 21) })) { SRID = 4326 };
+            
+            var ordersDistances = await context.Set<Order>().Select(x => x.DeliveryLocation.Distance(startPoint)).ToListAsync();
+
+            var orders = await context.Set<Order>().Where(x => x.DeliveryLocation.IsWithinDistance(startPoint, 1000000)).ToListAsync();
+            orders = await context.Set<Order>().OrderBy(x => x.DeliveryLocation.Distance(startPoint)).ToListAsync();
+            orders = await context.Set<Order>().Where(x => polygon.Intersects(x.DeliveryLocation)).ToListAsync();
+
+
+        }
+
+
+        private static async Task Procedures(DbContextOptionsBuilder<Context> contextOptions)
+        {
             using var context = new Context(contextOptions.Options);
             await context.Database.ExecuteSqlRawAsync("EXEC ChangePrice @p0", -1);
             var result = await context.Set<OrderSummary>().FromSqlInterpolated($"EXEC OrderSummary {2}").ToListAsync();
 
             var orderSummaries = await context.Set<OrderSummary>().ToListAsync();
-
-
         }
 
         private static void Backfields(DbContextOptionsBuilder<Context> contextOptions)
@@ -73,7 +90,7 @@ namespace ConsoleApp
             orders = await context.Set<Order>()/*.Where(x => !x.IsDeleted)*/.ToListAsync();
             context.ChangeTracker.Clear();
 
-            orders = await context.Set<Product>().SelectMany(x => x.Orders).Distinct().ToListAsync();
+            orders = await context.Set<Product>().SelectMany(x => x.Orders).ToListAsync();
         }
 
         private static void CompileQuery(DbContextOptionsBuilder<Context> contextOptions)
@@ -225,6 +242,8 @@ namespace ConsoleApp
                     var randomValue1 = random.Next(0, 9);
                     var randomValue2 = random.Next(0, 9);
                     order.Products = Enumerable.Range(Math.Min(randomValue1, randomValue2), Math.Max(randomValue1, randomValue2) - Math.Min(randomValue1, randomValue2)).Select(x => products[x]).ToList();
+
+                    order.DeliveryLocation = new Point(7 * i, 2.5 * i) { SRID = 4326 };
 
                     Console.WriteLine($"Stan zamówienia przed dodaniem do contekstu: {context.Entry(order).State}");
                     Console.WriteLine($"Stan jednego z produktów przed dodaniem do contekstu: {context.Entry(order.Products.First()).State}");
