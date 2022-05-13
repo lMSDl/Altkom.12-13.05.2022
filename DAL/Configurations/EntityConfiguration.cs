@@ -13,7 +13,9 @@ namespace DAL.Configurations
     {
         public virtual void Configure(EntityTypeBuilder<T> builder)
         {
-            builder.Property(x => x.Created).HasDefaultValueSql("getdate()");
+            //builder.Property(x => x.Created).HasDefaultValueSql("getdate()");
+            //konfiguracja shadow property
+            builder.Property<DateTime>("Created").HasDefaultValueSql("getdate()"); 
             builder.Property(x => x.Modified).ValueGeneratedOnUpdate();
         }
     }

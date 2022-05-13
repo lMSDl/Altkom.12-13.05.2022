@@ -23,7 +23,19 @@ namespace ConsoleApp
             CompileQuery(contextOptions);
             await GlobalFilters(contextOptions);
 
+            using var context = new Context(contextOptions.Options);
+            var dateTime = DateTime.Now.AddSeconds(-100);
+            var order = context.Set<Order>()
+                .Where(x => EF.Property<DateTime>(x, "Created") >= dateTime)
+                .OrderBy(x => EF.Property<DateTime>(x, "Created")) //EF stosujemy tylko w LinqToSql
+                //.ToList().OrderBy(x => context.Entry(x).Property("Created").CurrentValue) //przy zapytaniach na kolekacjach
+                .ToList();
 
+            context.Entry(order.First()).Property("Created").CurrentValue = new DateTime(2000, 1, 1);
+
+            ShowChangeTrackerDebugView(context);
+
+            await context.SaveChangesAsync();
         }
 
         private static async Task GlobalFilters(DbContextOptionsBuilder<Context> contextOptions)

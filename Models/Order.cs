@@ -23,6 +23,9 @@ namespace Models
 
         public OrderType OrderType { get; set; }
 
+        //public int? DescriptionId { get; set; } //ShadowProperty
+        public Description Description { get; set; }
+
         public DateTime DateTime { get; set; }
         //public virtual ICollection<Product> Products { get; set; }  // virtual wymagany przez ProxyLazyLoading
         public ICollection<Product> Products { get => _lazyLoader.Load(this, ref products); set => products = value; }
