@@ -91,5 +91,26 @@ namespace DAL.Properties {
                 return ResourceManager.GetString("OrderSummaryView", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CREATE OR ALTER TRIGGER PRODUCT_Delete On Product
+        ///	AFTER DELETE
+        ///	AS
+        ///	BEGIN
+        ///		SET NOCOUNT ON;
+        ///		DECLARE @id int
+        ///
+        ///		SELECT @id = DELETED.Id FROM DELETED
+        ///
+        ///		UPDATE [Order] SET DeletedProducts += 1
+        ///		WHERE Id IN (SELECT OrdersId FROM OrderProduct WHERE ProductsId = @id)
+        ///
+        ///	END.
+        /// </summary>
+        public static string ProductDeletedTrigger {
+            get {
+                return ResourceManager.GetString("ProductDeletedTrigger", resourceCulture);
+            }
+        }
     }
 }
